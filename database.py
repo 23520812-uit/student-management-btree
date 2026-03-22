@@ -1,3 +1,4 @@
+import unicodedata
 from student import Student
 from btree import BTree
 
@@ -15,9 +16,9 @@ class Database:
         
     def _init_mock_data(self):
         """Thêm dữ liệu mẫu vào cơ sở dữ liệu."""
-        self.add_student("SV001", "Nguyen Van A", "Nam", "ATTT")
-        self.add_student("SV005", "Tran Thi B", "Nu", "CNTT")
-        self.add_student("SV002", "Le Van C", "Nam", "KTPM")
+        self.add_student("SV001", "Nguyễn Văn A", "Nam", "ATTT")
+        self.add_student("SV005", "Trần Thị B", "Nữ", "CNTT")
+        self.add_student("SV002", "Lê Văn C", "Nam", "KTPM")
 
     def add_student(self, mssv, ho_ten, gioi_tinh, nganh):
         """
@@ -54,15 +55,23 @@ class Database:
             return self.table[result[1]]  # result[1] lưu mã định danh trỏ về bảng
         return None
 
+    @staticmethod
+    def _remove_accents(input_str):
+        """Hàm hỗ trợ loại bỏ dấu tiếng Việt để so sánh chuỗi linh hoạt hơn."""
+        nfkd_form = unicodedata.normalize('NFKD', input_str)
+        return "".join([c for c in nfkd_form if not unicodedata.combining(c)])
+
     def search_by_name(self, name):
         """
         Tìm kiếm bản ghi theo Tên (Trường hợp không có index trên trường này).
         Diễn ra quá trình Full Table Scan: Phải duyệt qua toàn bộ dữ liệu (O(N)).
+        Hỗ trợ tìm kiếm theo chuỗi con, không phân biệt hoa thường và không dấu.
         """
         results = []
-        name_lower = name.lower()
+        name_normalized = self._remove_accents(name).lower()
         for student in self.table.values():
-            if name_lower in student.ho_ten.lower():
+            student_name_normalized = self._remove_accents(student.ho_ten).lower()
+            if name_normalized in student_name_normalized:
                 results.append(student)
         return results
 
